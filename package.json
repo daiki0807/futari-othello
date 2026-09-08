@@ -11,7 +11,7 @@
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
     "format": "oxfmt",
-    "test": "node --experimental-strip-types --test tests/game.test.mjs",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "build:pages": "GITHUB_PAGES=true vinext build && node scripts/prepare-pages.mjs"
   },
   "dependencies": {
