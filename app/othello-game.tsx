@@ -10,14 +10,14 @@ import { isComputerTurn, humanMove, computerMove } from '@/lib/match';
 import type { Mode } from '@/lib/match';
 import { initialGame, legalMoves, name, score } from '@/lib/game';
 
-export default function Home() {
+export default function Home({active=true}:{active?:boolean}) {
   const [game, setGame] = useState(initialGame);
   const [resetOpen, setResetOpen] = useState(false);
   const [mode, setMode] = useState<Mode>('two-player');
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [pendingSettings, setPendingSettings] = useState<{mode: Mode; difficulty: Difficulty} | null>(null);
-  const settingsRef = useRef({mode,difficulty,paused:resetOpen});
-  settingsRef.current = {mode,difficulty,paused:resetOpen};
+  const settingsRef = useRef({mode,difficulty,paused:resetOpen||!active});
+  settingsRef.current = {mode,difficulty,paused:resetOpen||!active};
   const thinking = isComputerTurn(game,mode);
   const changeSettings = (next: {mode: Mode; difficulty: Difficulty}) => {
     if (next.mode === mode && next.difficulty === difficulty) return;
@@ -30,7 +30,7 @@ export default function Home() {
     setGame(initialGame());setPendingSettings(null);setResetOpen(false);
   };
   useEffect(() => {
-    if (!isComputerTurn(game,mode) || resetOpen) return;
+    if (!active || !isComputerTurn(game,mode) || resetOpen) return;
     let cancelled=false, worker: Worker | undefined;
     const apply = (index: number | null) => {
       if (!cancelled && index !== null && !settingsRef.current.paused && settingsRef.current.mode === mode && settingsRef.current.difficulty === difficulty) {
@@ -47,10 +47,11 @@ export default function Home() {
       } catch {fallback();}
     }, 400);
     return () => {cancelled=true;window.clearTimeout(timer);worker?.terminate();};
-  }, [game,mode,difficulty,resetOpen]);
+  }, [game,mode,difficulty,resetOpen,active]);
   const gameRef = useRef(game);
   gameRef.current = game;
   useEffect(() => {
+    if (!active) return;
     type Tool = { name: string; description: string; inputSchema: object; annotations: {readOnlyHint:boolean}; execute: (input: unknown) => unknown };
     const context = (document as Document & {modelContext?: {registerTool: (tool: Tool, options: {signal: AbortSignal}) => void | Promise<void>}}).modelContext;
     if (!context?.registerTool) return;
@@ -72,7 +73,7 @@ export default function Home() {
       try {void Promise.resolve(context.registerTool(tool,{signal:lifecycle.signal})).catch(() => {});} catch { /* Optional API; ordinary play remains available. */ }
     }
     return () => lifecycle.abort();
-  }, []);
+  }, [active]);
   const moves = game.over || thinking || resetOpen ? [] : legalMoves(game.board, game.turn);
   const counts = score(game.board);
   const result = counts.black === counts.white ? '引き分け！' : `${counts.black > counts.white ? '黒' : '白'}の勝ち！`;
