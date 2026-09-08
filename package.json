@@ -1,5 +1,5 @@
 {
-  "name": "sites-project",
+  "name": "futari-othello",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -10,7 +10,9 @@
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "test": "node --experimental-strip-types --test tests/game.test.mjs",
+    "build:pages": "GITHUB_PAGES=true vinext build && node scripts/prepare-pages.mjs"
   },
   "dependencies": {
     "react": "19.2.6",
